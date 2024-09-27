@@ -6,20 +6,29 @@ import joblib
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import shap
-from sklearn.model_selection import train_test_split
 import re
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 import nltk
+import os
 
-# Downloading necessary NLTK data 
-@st.cache_resource 
+
+@st.cache_resource
 def download_nltk_data():
-    nltk.download('punkt_tab') 
-    nltk.download('stopwords') 
+    # Define the path where NLTK data should be stored
+    nltk_data_path = os.path.join(os.path.expanduser("~"), "nltk_data")
+    
+    # Check if NLTK data already exists
+    if not os.path.exists(nltk_data_path):
+        # If it doesn't exist, download the data
+        for resource in ['punkt', 'stopwords', 'wordnet', 'omw-1.4']:
+            nltk.download(resource, quiet=True)
+    
+    # Set the NLTK data path
+    nltk.data.path.append(nltk_data_path)
 
+# Call the function at the start of your script
 download_nltk_data()
 
 # Function to load the model and vectorizer
@@ -74,19 +83,23 @@ def plot_confidence_histogram(df):
 lemmatizer = WordNetLemmatizer()
 # Function to clean the text
 def clean_text(text):
-    # Convert to lowercase
-    text = text.lower()
-    # Remove HTML tags
-    text = re.sub(r'<.*?>', '', text)
-    # Remove special characters
-    text = re.sub(r'[^a-z\s]', '', text)
-    # Tokenize
-    tokens = word_tokenize(text)
-    # Remove stopwords
-    stop_words = set(stopwords.words('english'))
-    tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
-    # Join tokens back into string
-    return ' '.join(tokens)
+    try:
+        # Convert to lowercase
+        text = text.lower()
+        # Remove HTML tags
+        text = re.sub(r'<.*?>', '', text)
+        # Remove special characters
+        text = re.sub(r'[^a-z\s]', '', text)
+        # Tokenize
+        tokens = word_tokenize(text)
+        # Remove stopwords
+        stop_words = set(stopwords.words('english'))
+        tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
+        # Join tokens back into string
+        return ' '.join(tokens)
+    except Exception as e:
+        st.error(f"Error in clean_text: {str(e)}")
+        return text # Return original text if cleaning fails
 
 # Main app
 st.title("Movie Review Sentiment Analysis")
@@ -175,80 +188,82 @@ if model is not None and tfidf is not None:
         uploaded_file = st.file_uploader("Upload a CSV file containing a 'review' column", type="csv")
         
         if uploaded_file is not None:
-            df = pd.read_csv(uploaded_file)
-            
-            if 'review' in df.columns:
-                # Cleaning the reviews
-                df['cleaned_review'] = df['review'].apply(clean_text)
+            try:
+                df = pd.read_csv(uploaded_file)
                 
-                reviews = df['cleaned_review'].tolist()
-                sentiments = predict_sentiments(reviews)
-                probabilities = model.predict_proba(tfidf.transform(reviews))
-                
-                # Display results
-                results_df = pd.DataFrame({
-                    'Review': df['review'],
-                    'Predicted Sentiment': sentiments,
-                    'Confidence': probabilities.max(axis=1)
-                })
-                st.write("Part of Reviews and Predicted Sentiments:")
-                st.write(results_df.head(7))
-                
-                # Generating insights for all reviews
-                all_reviews_text = ' '.join(reviews)
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.subheader("Word Cloud for All Reviews")
-                    st.pyplot(generate_wordcloud(all_reviews_text))
-                
-                with col2:
-                    st.subheader("VADER Sentiment Scores")
-                    vader_scores = vader_sentiment_analysis(all_reviews_text)
-                    binary_scores = {
-                        'Positive': vader_scores['pos'],
-                        'Negative': vader_scores['neg']
-                    }
-                    st.write(binary_scores)
+                if 'review' in df.columns:
+                    # Cleaning the reviews
+                    df['cleaned_review'] = df['review'].apply(clean_text)
+                    
+                    reviews = df['cleaned_review'].tolist()
+                    sentiments = predict_sentiments(reviews)
+                    probabilities = model.predict_proba(tfidf.transform(reviews))
+                    
+                    # Display results
+                    results_df = pd.DataFrame({
+                        'Review': df['review'],
+                        'Predicted Sentiment': sentiments,
+                        'Confidence': probabilities.max(axis=1)
+                    })
+                    st.write("Part of Reviews and Predicted Sentiments:")
+                    st.write(results_df.head(7))
+                    
+                    # Generating insights for all reviews
+                    all_reviews_text = ' '.join(reviews)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.subheader("Word Cloud for All Reviews")
+                        st.pyplot(generate_wordcloud(all_reviews_text))
+                    
+                    with col2:
+                        st.subheader("VADER Sentiment Scores")
+                        vader_scores = vader_sentiment_analysis(all_reviews_text)
+                        binary_scores = {
+                            'Positive': vader_scores['pos'],
+                            'Negative': vader_scores['neg']
+                        }
+                        st.write(binary_scores)
 
-                    # Creating matplotlib figure
-                    fig, ax = plt.subplots()
-                    colors = ['green', 'red']
-                    ax.bar(binary_scores.keys(), binary_scores.values(), color=colors)
-                    ax.set_ylabel('Score')
-                    ax.set_title('VADER Sentiment Scores')
+                        # Creating matplotlib figure
+                        fig, ax = plt.subplots()
+                        colors = ['green', 'red']
+                        ax.bar(binary_scores.keys(), binary_scores.values(), color=colors)
+                        ax.set_ylabel('Score')
+                        ax.set_title('VADER Sentiment Scores')
 
-                    # Rotate x-axis labels
-                    plt.xticks(rotation=45, ha='right')
+                        # Rotate x-axis labels
+                        plt.xticks(rotation=45, ha='right')
 
-                    # Adjust layout and display the plot
-                    plt.tight_layout()
-                    st.pyplot(fig) 
-                
-                # adding space
-                st.write("")
+                        # Adjust layout and display the plot
+                        plt.tight_layout()
+                        st.pyplot(fig) 
+                    
+                    # adding space
+                    st.write("")
 
-                st.subheader("Sentiment Confidence Analysis")
+                    st.subheader("Sentiment Confidence Analysis")
 
-                st.subheader("-Distribution of Confidence Levels")
-                st.markdown("""
-                This plot shows the distribution of confidence levels for the sentiment predictions.
-                A higher concentration of confidence levels near 1 indicates strong model reliability.
-                """)
+                    st.subheader("-Distribution of Confidence Levels")
+                    st.markdown("""
+                    This plot shows the distribution of confidence levels for the sentiment predictions.
+                    A higher concentration of confidence levels near 1 indicates strong model reliability.
+                    """)
 
-                # Calling the function to plot the confidence histogram
-                plot_confidence_histogram(results_df['Confidence'])
+                    # Calling the function to plot the confidence histogram
+                    plot_confidence_histogram(results_df['Confidence'])
 
-
-                # Updating sidebar with key insight
-                sentiment_distribution = results_df['Predicted Sentiment'].value_counts()
-                most_common_sentiment = sentiment_distribution.idxmax()
-                average_confidence = results_df['Confidence'].mean()
-                
-                st.sidebar.markdown(f"**-Most Common Sentiment:** {most_common_sentiment}")
-                st.sidebar.markdown(f"**-Average Confidence:** {average_confidence:.2f}")
-                st.sidebar.markdown(f"**-Total Reviews:** {len(reviews)}")
-            else:
-                st.error("The uploaded file does not contain a 'review' column.")
+                    # Updating sidebar with key insight
+                    sentiment_distribution = results_df['Predicted Sentiment'].value_counts()
+                    most_common_sentiment = sentiment_distribution.idxmax()
+                    average_confidence = results_df['Confidence'].mean()
+                    
+                    st.sidebar.markdown(f"**-Most Common Sentiment:** {most_common_sentiment}")
+                    st.sidebar.markdown(f"**-Average Confidence:** {average_confidence:.2f}")
+                    st.sidebar.markdown(f"**-Total Reviews:** {len(reviews)}")
+                else:
+                    st.error("The uploaded file does not contain a 'review' column.")
+            except Exception as e:
+                st.error(f"Error processing CSV: {str(e)}")
 else:
     st.error("Failed to load the model. Please check your model files and try again.")

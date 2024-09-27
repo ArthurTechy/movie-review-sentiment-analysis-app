@@ -1,7 +1,7 @@
 # Movie Review Sentiment Analysis
 
 ## Overview
-This project implements a binary sentiment classification model for movie reviews using the Stanford Large Movie Review Dataset. The application, built with Streamlit, allows users to analyze the sentiment of movie reviews either through manual input or by uploading a CSV file.
+This Streamlit application implements a binary sentiment classification model for movie reviews using the Stanford Large Movie Review Dataset. Users can analyze the sentiment of movie reviews through manual input or by uploading a CSV file.
 
 ## Features
 - Sentiment prediction for individual movie reviews
@@ -14,7 +14,7 @@ This project implements a binary sentiment classification model for movie review
 ## Dataset
 - **Source**: Stanford Large Movie Review Dataset
 - **Size**: 25,000 reviews for training, 25,000 for testing
-- **Link**: [https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz](https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz)
+- **Link**: [Stanford Large Movie Review Dataset](https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz)
 - **Citation**: Andrew L. Maas, Raymond E. Daly, Peter T. Pham, Dan Huang, Andrew Y. Ng, and Christopher Potts. (2011). Learning Word Vectors for Sentiment Analysis. The 49th Annual Meeting of the Association for Computational Linguistics (ACL 2011).
 
 ## Model
@@ -32,9 +32,7 @@ cd movie-review-sentiment-analysis-app
 pip install -r requirements.txt
 
 # Download NLTK data
-python -m nltk.downloader punkt
-python -m nltk.downloader stopwords
-```
+python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('omw-1.4')"
 
 ## Usage
 To run the Streamlit app:
@@ -47,6 +45,7 @@ streamlit run app.py
 - `logistic_regression_model.pkl`: Trained Logistic Regression model
 - `tfidf_vectorizer.pkl`: TF-IDF vectorizer
 - `requirements.txt`: List of required Python packages
+- `setup.sh`: Script for setting up the environment (particularly for deployment)
 
 ## Dependencies
 - streamlit
@@ -57,13 +56,19 @@ streamlit run app.py
 - matplotlib
 - nltk
 - scikit-learn
-- shap
+
+## Features in Detail
+
+- **Manual Input:** Users can enter a single movie review for sentiment analysis.
+- **CSV Upload:** Batch processing of reviews from a CSV file.
+- **Word Cloud:** Visual representation of frequently used words in reviews.
+- **VADER Sentiment Analysis:** Provides compound sentiment scores.
+- **Confidence Histogram:** Displays the distribution of model confidence for batch predictions.
 
 ## Future Improvements
 
 - Implement more advanced NLP techniques like BERT or transformers for potentially better accuracy
 - Add support for multi-class sentiment analysis (e.g., very negative, negative, neutral, positive, very positive)
-- Create a mobile app version for on-the-go sentiment analysis
 
 ## Contributing
 There is room for contributions to improve the Movie Review Sentiment Analysis project! Here's how you can contribute:
