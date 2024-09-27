@@ -22,7 +22,7 @@ def download_nltk_data():
     # Check if NLTK data already exists
     if not os.path.exists(nltk_data_path):
         # If it doesn't exist, download the data
-        for resource in ['punkt', 'stopwords', 'wordnet', 'omw-1.4']:
+        for resource in ['punkt_tab', 'stopwords', 'wordnet', 'omw-1.4', 'vader_lexicon']:
             nltk.download(resource, quiet=True)
     
     # Set the NLTK data path

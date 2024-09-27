@@ -31,8 +31,8 @@ cd movie-review-sentiment-analysis-app
 # Install required packages
 pip install -r requirements.txt
 
-# Download NLTK data
-python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('omw-1.4')"
+# Download NLTK data (into 'setup.sh')
+python -c "import nltk; nltk.download('punkt_tab'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('omw-1.4'); nltk.download('vader_lexicon')"
 
 ## Usage
 To run the Streamlit app:
