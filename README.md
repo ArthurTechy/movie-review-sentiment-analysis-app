@@ -93,3 +93,5 @@ For any questions or feedback about this project, please reach out to:
 - LinkedIn: www.linkedin.com/in/chiezie-arthur-ezenwaegbu
 
 You can also open an issue in the GitHub repository if you encounter any problems or have feature requests.
+
+- **Click to view the App**: [Link](https://movie-review-sentiment-analyzer.streamlit.app/)
